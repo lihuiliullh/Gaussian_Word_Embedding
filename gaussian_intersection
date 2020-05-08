@@ -1,0 +1,47 @@
+# -*- coding: utf-8 -*-
+import numpy as np
+import pylab
+
+"""
+Imagine you have two random variables X_1 and X_2 and both of them are normally distributed, but with different parameters. In this example, let's say distribution of X_1 is g1(x) and for X2 it is g2(x). 
+
+P(X_1) ~ N(µ1,Σ1), P(X_2) ~ N(µ2, Σ2). Where Σ1 and Σ2 are variances of X_1 and X_2 consecutively which are in this example s1^2 and s2^2.
+
+
+Then you could compute an intersection just by multiplying this to densities together, and you could observe that result is again a normal distribution which follows the equation (intuitively the probability of randomly selecting X1 == X2),
+
+P(X_1)*P(X_2) = N( Σ2*µ1/(Σ1+Σ2) + Σ1*u2/(Σ1+Σ2), 1/((1/Σ1)+(1/Σ2)) )  
+
+
+It's interesting to look at how the new mean and the covariance is computed. 
+    * New mean is actually weighted of the old means weighted by the opposite covariance. Let's assume that the distribution of X_1 is skinny and has low variance compared to the distribution of X_2. The second Gaussian here has a very large covariance so it's a very broad and very wide uncertain distribution. Whereas X_1 is really narrow and has a very small covariance, so the random variable X_1 has much less uncertainty than random variable X_2. Then the result of the intersection will be strongly influenced by µ_1, so by the first random variable X_1 because Σ2 is large and Σ1 is relatively small. In same manner the influence of µ_2 will be relatively limited. 
+    * New covariance is essentially the inverse of the sum of the individual covariance inverses. 
+
+In short it means that the uncertainty shrinks, so the covariance shrinks, so if you combine two Gaussians then the result will be narrower and more certain than the original covariances. And the mean of the new distribution would be proportionately closer to the skinnier distribution. 
+Checkout desmos plot @ https://www.desmos.com/calculator/qtua9ikyhc
+"""
+def genGaussian(mean, stdev, size=(100)):
+    return np.random.normal(mean, stdev, size)
+
+pylab.figure(1)
+X1 = genGaussian(0, 2, 100000)
+X2 = genGaussian(2, 0.1, 100000)
+pylab.hist(X1, bins=100, color="red")
+pylab.hist(X2, bins=100, color="green")
+pylab.title("X1: mean=%f, var=%f\nX2: mean=%f, var=%f"%(X1.mean(),X1.var(),X2.mean(),X2.var()))
+
+print "dist1 mean=", X1.mean(), " stdev=", X1.std(), " variance=", X1.var()
+print "dist2 mean=", X2.mean(), " stdev=", X2.std(), " variance=", X2.var()
+
+new_dist = np.array([])
+for i in range(100000):
+    x1 = np.random.choice(X1)
+    x2 = np.random.choice(X2)  
+    if abs(x1-x2) < 0.02:
+        new_dist = np.append(new_dist,x1)
+
+print "intersection mean=", new_dist.mean(), " stdev=", new_dist.std(), " variance=", new_dist.var()
+pylab.figure(2)
+pylab.hist(new_dist, bins=100, color="yellow")
+pylab.title("New Distribution: mean=%f, var=%f"%(new_dist.mean(),new_dist.var()))
+pylab.show()
